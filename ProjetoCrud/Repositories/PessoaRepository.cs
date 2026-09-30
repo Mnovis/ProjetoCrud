@@ -14,7 +14,7 @@ namespace ProjetoCrud.Repositories
     {
         #region Atributos Privados
 
-        private readonly string _connectionString = "";
+        private readonly string _connectionString = "Server=localhost,1434; Database=master; User Id=sa; Password=Coti@2026; TrustServerCertificate=True";
 
         #endregion
 
@@ -32,6 +32,78 @@ namespace ProjetoCrud.Repositories
                     """, pessoa);
             }
         }
+
+        public void Atualizar(Pessoa pessoa)
+        {
+            using (var connection = new SqlConnection(_connectionString)) 
+            {
+                connection.Execute("""
+                        UPDATE PESSOAS
+                        SET 
+                            NOME = @Nome, 
+                            CPF = @Cpf, 
+                            EMAIL = @Email
+                        WHERE 
+                            ID = @Id
+                    """, pessoa);
+            }
+
+        }
+
+        public void Excluir(int id)
+        {
+            using (var connection = new SqlConnection(_connectionString)) 
+            {
+                connection.Execute("""  
+                        DELETE FROM PESSOAS
+                        WHERE ID = @Id
+
+                    """, new { @Id = id});
+            }
+        }
+
+        public List<Pessoa> ObterTodos() 
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                return connection.Query<Pessoa>("""
+                    SELECT ID, NOME, EMAIL, CPF, DATAHORACADASTRO
+                    FROM PESSOAS
+                    ORDER BY ID
+                    """).ToList();
+            }
+        }
+
+        public Pessoa? ObterPorId(int id) 
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                return connection.QuerySingleOrDefault<Pessoa>("""
+                    SELECT ID, NOME, EMAIL, CPF, DATAHORACADASTRO
+                    FROM PESSOAS
+                    WHERE ID = @Id
+                    """, new { @Id = id });
+            }
+        }
+
+        public bool VerificarCpf(string cpf, int id = 0)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var qtd = connection.QuerySingle<int>("""
+                        SELECT COUNT(*)
+                        FROM PESSOAS
+                        WHERE CPF = @Cpf
+                        AND ID <> @Id
+                    """, new {
+                    @Cpf = cpf,
+                    @Id = id
+                });
+
+                return qtd > 0;
+            }
+        }
+
 
         #endregion
 
